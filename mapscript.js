@@ -10,14 +10,11 @@ var map = new mapboxgl.Map({
 map.on('load', function() {
     map.addControl(new mapboxgl.Geocoder());
 
+    //arrondissements
 
     map.addSource("arrondissements",{
         type: "geojson",
         data: "arrondissements.geojson",
-    });
-    map.addSource("quartier",{
-        type: "geojson",
-        data: "quartier_paris.geojson",
     });
     map.addLayer(
         {
@@ -32,6 +29,14 @@ map.on('load', function() {
             }
         }
     );
+
+    //quartier
+
+    map.addSource("quartier",{
+        type: "geojson",
+        data: "quartier_paris.geojson",
+    });
+
     map.addLayer(
         {
             "id": "quartier1",
@@ -40,11 +45,13 @@ map.on('load', function() {
             'layout': {},
             'paint' : {
                 'line-color': '#005',
-                'line-opacity' : 0.2,
+                'line-opacity' : 0.4,
                 'line-width' : 2.
             }
         }
     );
+
+    //antenas
 
     map.addSource("antenas", {
         type: "geojson",
@@ -55,14 +62,14 @@ map.on('load', function() {
         //clusterMaxZoom: 3, // Max zoom to cluster points on
         clusterRadius: 20 // Use small cluster radius for the heatmap look
     });
-    var layers = [
+    var layers_antenas = [
         [0, 'green'],
         [2, 'orange'],
         [3, 'red']
     ];
 
 
-    layers.forEach(function (layer, i) {
+    layers_antenas.forEach(function (layer, i) {
         map.addLayer({
             "id": "antenas-" + i,
             "type": "circle",
@@ -72,11 +79,11 @@ map.on('load', function() {
                 "circle-radius": 70,
                 "circle-blur": 1 // blur the circles to get a heatmap look
             },
-            "filter": i === layers.length - 1 ?
+            "filter": i === layers_antenas.length - 1 ?
                 [">=", "point_count", layer[0]] :
                 ["all",
                     [">=", "point_count", layer[0]],
-                    ["<", "point_count", layers[i + 1][0]]]
+                    ["<", "point_count", layers_antenas[i + 1][0]]]
         }, 'waterway-label');
     });
 
@@ -91,10 +98,140 @@ map.on('load', function() {
         },
         "filter": ["!=", "cluster", true]
     }, 'waterway-label');
+
+    //floods
+
+    map.addSource("crowds",{
+        type: "geojson",
+        data: "IRIS_Crowds.geojson",
+    });
+
+
+
+/*    var layers_crowds = [
+        [0, 'green'],
+        [1000, 'orange'],
+        [1500, 'red']
+    ];
+
+
+    layers_crowds.forEach(function (layer, i) {
+        map.addLayer({
+            "id": "crowds-"+i,
+            "source": "crowds",
+            "type": "fill",
+            'layout': {},
+            'paint' : {
+                'fill-color': layer[1],
+                'fill-opacity' : 0.3,
+            },
+            "filter": i === layers_crowds.length - 1 ?
+                [">=", "GRIDCODE", layer[0]] :
+                ["all",
+                    [">=", "GRIDCODE", layer[0]],
+                    ["<", "GRIDCODE", layers_crowds[i + 1][0]]]
+        });
+    });
+
+*/
+    map.addLayer({
+        "id": "crowds-1",
+        "source": "crowds",
+        "type": "fill",
+        'layout': {},
+        'paint' : {
+            'fill-color':
+            {
+                property: 'GRIDCODE',
+                stops: [
+                    [0,'#F00'],
+                    [2000, '#0F0']
+                ]
+            },
+            'fill-opacity' : 0.3,
+        }
+
+    });
+
+    //population
+
+    //TODO
+    map.addSource("population",{
+        type: "geojson",
+        data: "Population_IRIS.geojson",
+    });
+    map.addLayer({
+        "id": "population-1",
+        "source": "population",
+        "type": "fill",
+        'layout': {},
+        'paint' : {
+            'fill-color':
+            {
+                property: 'GRIDCODE',
+                stops: [
+                    [0,'#F00'],
+                    [2000, '#0F0']
+                ]
+            },
+            'fill-opacity' : 0.3,
+        }
+
+    });
+
+    //floodrisk
+
+    map.addSource("floods",{
+        type: "geojson",
+        data: "Quartier_Floods.geojson",
+    });
+    map.addLayer({
+        "id": "floodrisk-1",
+        "source": "floods",
+        "type": "fill",
+        'layout': {},
+        'paint' : {
+            'fill-color': '#00F',
+            'fill-opacity' : {
+                property: 'Flood_Risk',
+                stops: [
+                    [0.0, 0.0],
+                    [1.0, 0.3]
+                ]
+            },
+        }
+
+    });
+
+    //restaurants
+
+    map.addSource("restaurants",{
+        type: "geojson",
+        data: "Restaurants_Quartier.geojson" ,
+    });
+    map.addLayer({
+        "id": "restaurants-1",
+        "source": "restaurants",
+        "type": "fill",
+        'layout': {},
+        'paint' : {
+            'fill-color':  {
+                property: 'Density',
+                stops: [
+                    [0.0, '#F00'],
+                    [0.3, '#0F0']
+                ]
+            },
+            'fill-opacity' :0.3,
+        }
+
+    });
+
+    //menu
     turnedOn=0;
     turnedOnButt=null;
-    var toggleableLayerIds = [ 'antenas', 'Pure Map' ];
-    var toggleableLayers= [['antenas-0','antenas-1','antenas-2','antenas-5'],[]]
+    var toggleableLayerIds = [ 'antenas', 'Crowds', 'Population', 'Flood risk' ,'Restaurants'];
+    var toggleableLayers= [['antenas-0','antenas-1','antenas-2','antenas-5'],['crowds-1'],['population-1'],['floodrisk-1'],['restaurants-1']]
 
     for (var i = 0; i < toggleableLayerIds.length; i++) {
         function name() {
