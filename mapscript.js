@@ -51,60 +51,7 @@ map.on('load', function() {
         }
     );
 
-    //antenas
-
-    map.addSource("antenas", {
-        type: "geojson",
-        // Point to GeoJSON data. This example visualizes all M1.0+ earthquakes
-        // from 12/22/15 to 1/21/16 as logged by USGS' Earthquake hazards program.
-        data: "liste-des-antennes-wifi.geojson",
-        cluster: true,
-        //clusterMaxZoom: 3, // Max zoom to cluster points on
-        clusterRadius: 20 // Use small cluster radius for the heatmap look
-    });
-    var layers_antenas = [
-        [0, 'green'],
-        [2, 'orange'],
-        [3, 'red']
-    ];
-
-
-    layers_antenas.forEach(function (layer, i) {
-        map.addLayer({
-            "id": "antenas-" + i,
-            "type": "circle",
-            "source": "antenas",
-            "paint": {
-                "circle-color": layer[1],
-                "circle-radius": 70,
-                "circle-blur": 1 // blur the circles to get a heatmap look
-            },
-            "filter": i === layers_antenas.length - 1 ?
-                [">=", "point_count", layer[0]] :
-                ["all",
-                    [">=", "point_count", layer[0]],
-                    ["<", "point_count", layers_antenas[i + 1][0]]]
-        }, 'waterway-label');
-    });
-
-    map.addLayer({
-        "id": "antenas-5",
-        "type": "circle",
-        "source": "antenas",
-        "paint": {
-            "circle-color": 'rgba(0,255,0,0.5)',
-            "circle-radius": 20,
-            "circle-blur": 1
-        },
-        "filter": ["!=", "cluster", true]
-    }, 'waterway-label');
-
-    //floods
-
-    map.addSource("crowds",{
-        type: "geojson",
-        data: "IRIS_Crowds.geojson",
-    });
+    
 
 
 
@@ -259,8 +206,8 @@ map.on('load', function() {
     //menu
     turnedOn=0;
     turnedOnButt=null;
-    var toggleableLayerIds = [ 'antenas', 'Crowds', 'Population', 'Flood risk' ,'Restaurants'];
-    var toggleableLayers= [['antenas-0','antenas-1','antenas-2','antenas-5'],['crowds-1'],['population-1'],['floodrisk-1'],['restaurants-1']]
+    var toggleableLayerIds = [  'Crowds', 'Population', 'Flood risk' ,'Restaurants'];
+    var toggleableLayers= [['crowds-1'],['population-1'],['floodrisk-1'],['restaurants-1']]
 
     for (var i = 0; i < toggleableLayerIds.length; i++) {
         function name() {
