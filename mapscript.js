@@ -158,7 +158,7 @@ map.on('load', function() {
     //TODO
     map.addSource("population",{
         type: "geojson",
-        data: "Population_IRIS.geojson",
+        data: "Pop_Quartier.geojson",
     });
     map.addLayer({
         "id": "population-1",
@@ -168,10 +168,11 @@ map.on('load', function() {
         'paint' : {
             'fill-color':
             {
-                property: 'GRIDCODE',
+                property: 'Density',
                 stops: [
-                    [0,'#F00'],
-                    [2000, '#0F0']
+                    [0,'#0F0'],
+                    [20, '#880'],
+                    [150, '#F00']
                 ]
             },
             'fill-opacity' : 0.3,
@@ -196,7 +197,7 @@ map.on('load', function() {
                 property: 'Flood_Risk',
                 stops: [
                     [0.0, 0.0],
-                    [1.0, 0.3]
+                    [7.0, 0.3]
                 ]
             },
         }
@@ -226,6 +227,34 @@ map.on('load', function() {
         }
 
     });
+
+    function property(a)
+    {
+        if (typeof a.Flood_Risk !== "undefined") return "IRIS with flooding::" + a.Flood_Risk;
+        if (typeof a.Density !== "undefined") return "Density:" + a.Density.toFixed(2);
+        if (typeof a.GRIDCODE !== "undefined") return "Number of active cell phones:" + a.GRIDCODE.toFixed(2);
+        return a.Flood_Risk;
+    }
+
+
+    map.on('click', function (e) {
+        var features = map.queryRenderedFeatures(e.point, { layers: ['crowds-1','population-1','floodrisk-1','restaurants-1'] });
+
+        if (!features.length) {
+            return;
+        }
+
+        var feature = features[0];
+
+        // Populate the popup and set its coordinates
+        // based on the feature found.
+
+        var popup = new mapboxgl.Popup()
+            .setLngLat(e.lngLat)
+            .setHTML(property(feature.properties))
+            .addTo(map);
+    });
+
 
     //menu
     turnedOn=0;
