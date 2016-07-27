@@ -45,8 +45,8 @@ map.on('load', function() {
             'layout': {},
             'minzoom': 10,
             'paint' : {
-                'line-color': '#005',
-                'line-opacity' : 0.4,
+                'line-color': '#008',
+                'line-opacity' : 0.7,
                 'line-width' : 2.
             }
         }
@@ -62,7 +62,20 @@ map.on('load', function() {
         data: "FULL_DATA_IRIS.geojson",
     });
 
-
+    map.addLayer(
+        {
+            "id": "iris",
+            "source": "data",
+            "type": "line",
+            'layout': {},
+            'minzoom': 14,
+            'paint' : {
+                'line-color': '#005',
+                'line-opacity' : 0.5,
+                'line-width' : 1.
+            }
+        }
+    );
 
 /*    var layers_crowds = [
         [0, 'green'],
@@ -228,7 +241,7 @@ map.on('load', function() {
     turnedOn=0;
     turnedOnButt=null;
     var toggleableLayerIds = [  'Crowds', 'Population', 'Flood risk' ,'Restaurants', 'Polution'];
-    var toggleableLayers= [['crowds-1'],['population-1'],['floodrisk-1'],['restaurants-1'],['polution-1']]
+    var toggleableLayers= [['crowds-1'],['population-1'],['floodrisk-1'],['restaurants-1'],['polution-1']];
 
     for (var i = 0; i < toggleableLayerIds.length; i++) {
         function name() {
