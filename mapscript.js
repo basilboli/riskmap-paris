@@ -43,6 +43,7 @@ map.on('load', function() {
             "source": "quartier",
             "type": "line",
             'layout': {},
+            'minzoom': 10,
             'paint' : {
                 'line-color': '#005',
                 'line-opacity' : 0.4,
@@ -53,12 +54,12 @@ map.on('load', function() {
 
     //antenas
 
-    
+
     //floods
 
-    map.addSource("crowds",{
+    map.addSource("data",{
         type: "geojson",
-        data: "IRIS_Crowds.geojson",
+        data: "FULL_DATA_IRIS.geojson",
     });
 
 
@@ -91,13 +92,13 @@ map.on('load', function() {
 */
     map.addLayer({
         "id": "crowds-1",
-        "source": "crowds",
+        "source": "data",
         "type": "fill",
         'layout': {},
         'paint' : {
             'fill-color':
             {
-                property: 'GRIDCODE',
+                property: 'Crowd_Dens',
                 stops: [
                     [0,'#F00'],
                     [2000, '#0F0']
@@ -111,19 +112,16 @@ map.on('load', function() {
     //population
 
     //TODO
-    map.addSource("population",{
-        type: "geojson",
-        data: "Pop_Quartier.geojson",
-    });
+
     map.addLayer({
         "id": "population-1",
-        "source": "population",
+        "source": "data",
         "type": "fill",
         'layout': {},
         'paint' : {
             'fill-color':
             {
-                property: 'Density',
+                property: 'Pop_Densit',
                 stops: [
                     [0,'#0F0'],
                     [20, '#880'],
@@ -137,45 +135,53 @@ map.on('load', function() {
 
     //floodrisk
 
-    map.addSource("floods",{
-        type: "geojson",
-        data: "Quartier_Floods.geojson",
-    });
+
     map.addLayer({
         "id": "floodrisk-1",
-        "source": "floods",
+        "source": "data",
         "type": "fill",
         'layout': {},
         'paint' : {
             'fill-color': '#00F',
-            'fill-opacity' : {
-                property: 'Flood_Risk',
-                stops: [
-                    [0.0, 0.0],
-                    [7.0, 0.3]
-                ]
-            },
-        }
+            'fill-opacity' : 0.3,
+
+        },
+        'filter':
+            ["==", "Flood_Risk", "YES"],
 
     });
 
     //restaurants
 
-    map.addSource("restaurants",{
-        type: "geojson",
-        data: "Restaurants_Quartier.geojson" ,
-    });
     map.addLayer({
         "id": "restaurants-1",
-        "source": "restaurants",
+        "source": "data",
         "type": "fill",
         'layout': {},
         'paint' : {
             'fill-color':  {
-                property: 'Density',
+                property: 'Rest_Densi',
                 stops: [
                     [0.0, '#F00'],
-                    [0.3, '#0F0']
+                    [2, '#0F0']
+                ]
+            },
+            'fill-opacity' :0.3,
+        }
+
+    });
+    //polution
+    map.addLayer({
+        "id": "polution-1",
+        "source": "data",
+        "type": "fill",
+        'layout': {},
+        'paint' : {
+            'fill-color':  {
+                property: 'Pollution',
+                stops: [
+                    [15, '#0F0'],
+                    [40, '#F00']
                 ]
             },
             'fill-opacity' :0.3,
@@ -183,17 +189,24 @@ map.on('load', function() {
 
     });
 
+    //tooltip text
     function property(a)
     {
-        if (typeof a.Flood_Risk !== "undefined") return "IRIS with flooding::" + a.Flood_Risk;
-        if (typeof a.Density !== "undefined") return "Density:" + a.Density.toFixed(2);
-        if (typeof a.GRIDCODE !== "undefined") return "Number of active cell phones:" + a.GRIDCODE.toFixed(2);
-        return a.Flood_Risk;
+        var s = "<h3>"+ a.NOM+"</h3>" +
+                "Flood risk: " + a.Flood_Risk + "<br/>" +
+                "Population: "+ a.POPULATION + "<br/>" +
+                "Area:" + a.Area.toFixed(2) + " ha <br/>" +
+                "Population density: "+a.Pop_Densit.toFixed(2) + " people/ha<br/>" +
+                "Pollution index:" + a.Pollution +"<br/>" +
+                "Restaurants:" + a.Restau.toFixed(0)+ "<br/>" +
+                "Restaurant density:" + a.Rest_Densi.toFixed(2) + "<br/>" +
+                "Crowdness:" + a.Crowd_Dens + "<br/>";
+        return s;
     }
 
 
     map.on('click', function (e) {
-        var features = map.queryRenderedFeatures(e.point, { layers: ['crowds-1','population-1','floodrisk-1','restaurants-1'] });
+        var features = map.queryRenderedFeatures(e.point, { layers: ['crowds-1','population-1','floodrisk-1','restaurants-1','polution-1'] });
 
         if (!features.length) {
             return;
@@ -214,8 +227,8 @@ map.on('load', function() {
     //menu
     turnedOn=0;
     turnedOnButt=null;
-    var toggleableLayerIds = [  'Crowds', 'Population', 'Flood risk' ,'Restaurants'];
-    var toggleableLayers= [['crowds-1'],['population-1'],['floodrisk-1'],['restaurants-1']]
+    var toggleableLayerIds = [  'Crowds', 'Population', 'Flood risk' ,'Restaurants', 'Polution'];
+    var toggleableLayers= [['crowds-1'],['population-1'],['floodrisk-1'],['restaurants-1'],['polution-1']]
 
     for (var i = 0; i < toggleableLayerIds.length; i++) {
         function name() {
