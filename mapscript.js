@@ -6,29 +6,28 @@ var map = new mapboxgl.Map({
     zoom: 13
 });
 
+//marker
+var marker = {
+    "type": "FeatureCollection",
+    "features": [{
+        "type": "Feature",
+        "geometry": {
+            "type": "Point",
+            "coordinates": [2.349, 48.86]
+        }
+    }]
+};
+
 
 map.on('load', function() {
-    map.addControl(new mapboxgl.Geocoder());
-
+    var geocoder=new mapboxgl.Geocoder();
+    map.addControl(geocoder);
     //arrondissements
 
     map.addSource("arrondissements",{
         type: "geojson",
         data: "arrondissements.geojson",
     });
-    map.addLayer(
-        {
-            "id": "arrondissements1",
-            "source": "arrondissements",
-            "type": "line",
-            'layout': {},
-            'paint' : {
-                'line-color': '#008',
-                'line-opacity' : 0.2,
-                'line-width' : 4.
-            }
-        }
-    );
 
     //quartier
 
@@ -37,45 +36,14 @@ map.on('load', function() {
         data: "quartier_paris.geojson",
     });
 
-    map.addLayer(
-        {
-            "id": "quartier1",
-            "source": "quartier",
-            "type": "line",
-            'layout': {},
-            'minzoom': 10,
-            'paint' : {
-                'line-color': '#008',
-                'line-opacity' : 0.7,
-                'line-width' : 2.
-            }
-        }
-    );
 
-    //antenas
-
-
-    //floods
 
     map.addSource("data",{
         type: "geojson",
         data: "FULL_DATA_IRIS.geojson",
     });
+    //floods
 
-    map.addLayer(
-        {
-            "id": "iris",
-            "source": "data",
-            "type": "line",
-            'layout': {},
-            'minzoom': 14,
-            'paint' : {
-                'line-color': '#005',
-                'line-opacity' : 0.5,
-                'line-width' : 1.
-            }
-        }
-    );
 
 /*    var layers_crowds = [
         [0, 'green'],
@@ -202,49 +170,99 @@ map.on('load', function() {
 
     });
 
+    //pure-map
+    map.addLayer({
+        "id": "pure-map-1",
+        "source": "data",
+        "type": "fill",
+        'layout': {},
+        'paint' : {
+
+            'fill-opacity' :0.001,
+        }
+
+    });
+
     //tooltip text
     function property(a)
     {
         var s = "<h3>"+ a.NOM+"</h3>" +
                 "Flood risk: " + a.Flood_Risk + "<br/>" +
                 "Population: "+ a.POPULATION + "<br/>" +
-                "Area:" + a.Area.toFixed(2) + " ha <br/>" +
+                "Area: " + a.Area.toFixed(2) + " ha <br/>" +
                 "Population density: "+a.Pop_Densit.toFixed(2) + " people/ha<br/>" +
-                "Pollution index:" + a.Pollution +"<br/>" +
-                "Restaurants:" + a.Restau.toFixed(0)+ "<br/>" +
-                "Restaurant density:" + a.Rest_Densi.toFixed(2) + "<br/>" +
-                "Crowdness:" + a.Crowd_Dens + "<br/>";
+                "Pollution index: " + a.Pollution +"<br/>" +
+                "Restaurants :" + a.Restau.toFixed(0)+ "<br/>" +
+                "Restaurant density: " + a.Rest_Densi.toFixed(2) + "<br/>" +
+                "Crowdness: " + a.Crowd_Dens + "<br/>";
         return s;
     }
 
+    //marker
 
-    map.on('click', function (e) {
-        var features = map.queryRenderedFeatures(e.point, { layers: ['crowds-1','population-1','floodrisk-1','restaurants-1','polution-1'] });
+    map.addSource('point', {
+        "type": "geojson",
+        "data": marker
+    });
+
+    map.addLayer({
+        "id": "point",
+        "type": "circle",
+        "source": "point",
+        "paint": {
+            "circle-radius": 10,
+            "circle-color": "#3887be"
+        }
+    });
+
+    function clicklike(cord)
+    {
+        var features = map.queryRenderedFeatures(map.project(cord), { layers: ['crowds-1','population-1','floodrisk-1','restaurants-1','polution-1','pure-map-1'] });
 
         if (!features.length) {
             return;
         }
 
         var feature = features[0];
-
+        console.log(feature);
         // Populate the popup and set its coordinates
         // based on the feature found.
+        marker.features[0].geometry.coordinates = [cord.lng, cord.lat];
+        map.getSource('point').setData(marker);
 
-        var popup = new mapboxgl.Popup()
-            .setLngLat(e.lngLat)
-            .setHTML(property(feature.properties))
-            .addTo(map);
+        /*var popup = new mapboxgl.Popup()
+         .setLngLat(e.lngLat)
+         .setHTML(property(feature.properties))
+         .addTo(map);*/
+
+        var panel = document.getElementById( 'panel' ),
+            menu = document.getElementById( 'menu' );
+
+        menu.style.right = "310px";
+        panel.innerHTML = property(feature.properties);
+
+        panel.style.display = "block";
+
+    }
+
+    map.on('click', function (e) {
+        console.log(e.lngLat);
+        clicklike(e.lngLat)
+    });
+    geocoder.on('result', function(ev) {
+        console.log(new mapboxgl.LngLat(ev.result.geometry.coordinates[0],ev.result.geometry.coordinates[1]));
+        clicklike(new mapboxgl.LngLat(ev.result.geometry.coordinates[0],ev.result.geometry.coordinates[1]));
     });
 
 
     //menu
     turnedOn=0;
     turnedOnButt=null;
-    var toggleableLayerIds = [  'Crowds', 'Population', 'Flood risk' ,'Restaurants', 'Polution'];
-    var toggleableLayers= [['crowds-1'],['population-1'],['floodrisk-1'],['restaurants-1'],['polution-1']];
+    var toggleableLayerIds = ['Pure map',  'Crowds', 'Population', 'Flood risk' ,'Restaurants', 'Polution'];
+    var toggleableLayers= [['pure-map-1'],['crowds-1'],['population-1'],['floodrisk-1'],['restaurants-1'],['polution-1']];
 
     for (var i = 0; i < toggleableLayerIds.length; i++) {
-        function name() {
+        function f() {
             var id = toggleableLayerIds[i];
             var shadedI = i + 0;
             var link = document.createElement('a');
@@ -294,6 +312,58 @@ map.on('load', function() {
             var menubutton = document.getElementById('menu');
             menubutton.appendChild(link);
         }
-        name();
+        f();
     }
+
+
+
+    //iris borders
+
+    map.addLayer(
+        {
+            "id": "iris",
+            "source": "data",
+            "type": "line",
+            'layout': {},
+            'minzoom': 13,
+            'paint' : {
+                'line-color': '#888',
+                'line-opacity' : 0.8,
+                'line-width' : 3.
+            }
+        }
+    );
+    //quartier
+
+/*    map.addLayer(
+        {
+            "id": "quartier1",
+            "source": "quartier",
+            "type": "line",
+            'layout': {},
+            'minzoom': 11,
+            'paint' : {
+                'line-color': '#888',
+                'line-opacity' : 0.8,
+                'line-width' : 3.
+            }
+        }
+    );
+    */
+    //arrondissements
+
+    map.addLayer(
+        {
+            "id": "arrondissements1",
+            "source": "arrondissements",
+            "type": "line",
+            'layout': {},
+            'paint' : {
+                'line-color': '#555',
+                'line-opacity' : 0.8,
+                'line-width' : 5.
+            }
+        }
+    );
+
 });
